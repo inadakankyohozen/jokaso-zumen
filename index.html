@@ -1510,8 +1510,7 @@ function exportUsersCSV() {
   const rows = USERS.map(u =>
     `${u['名前']},${u['ID']},${u['パスワード']},${u['有効']}`
   );
-  const csv = [header, ...rows].join('
-');
+  const csv = [header, ...rows].join('\n');
   const bom = '﻿'; // Excel対応BOM
   const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
