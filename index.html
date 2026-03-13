@@ -710,7 +710,7 @@ function doLogin() {
   const user = USERS.find(u =>
     u['ID'] === id &&
     u['パスワード'] === pw &&
-    u['有効'] === '○'
+    (u['有効'] === '1' || u['有効'] === '○')
   );
 
   if (!user) {
