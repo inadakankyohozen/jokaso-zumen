@@ -439,6 +439,7 @@ canvas.pdf-canvas{display:block;}
     <span class="header-logo">🗂️</span>
     <span class="header-title">浄化槽図面検索システム</span>
     <span class="header-username" id="headerUsername"></span>
+    <button class="header-admin" id="adminBtn" onclick="openAdminPanel()" style="display:none;font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;cursor:pointer;margin-right:4px;transition:all .2s;white-space:nowrap;">⚙ 管理</button>
     <button class="header-logout" onclick="doLogout()">ログアウト</button>
   </header>
 
@@ -564,6 +565,36 @@ canvas.pdf-canvas{display:block;}
 
 <!-- 印刷用エリア -->
 <div id="printArea"></div>
+
+<!-- ユーザー管理パネル -->
+<div class="dialog-overlay" id="adminPanel" style="z-index:700;align-items:stretch;padding:0;">
+  <div style="background:var(--surface);width:100%;max-width:560px;margin:auto;border-radius:16px;display:flex;flex-direction:column;max-height:90vh;overflow:hidden;">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+      <span style="font-size:20px;">⚙️</span>
+      <span style="font-size:16px;font-weight:700;flex:1;">ユーザー管理</span>
+      <button onclick="closeAdminPanel()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:20px 24px;">
+      <div id="userList"></div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;">➕ 新規ユーザー追加</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <input id="newName" placeholder="名前" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;">
+          <input id="newId" placeholder="ID（半角英数字）" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:8px;">
+          <input id="newPw" placeholder="パスワード" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;">
+          <button onclick="addUser()" style="padding:10px 20px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">追加</button>
+        </div>
+        <div id="addUserError" style="font-size:12px;color:var(--danger);margin-top:8px;display:none;"></div>
+      </div>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:space-between;align-items:center;">
+      <div style="font-size:11px;color:var(--text3);">変更後はCSVをダウンロードしてGitHubに<br>アップロードしてください</div>
+      <button onclick="exportUsersCSV()" style="padding:10px 20px;background:var(--success);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">📥 CSVダウンロード</button>
+    </div>
+  </div>
+</div>
 
 <!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -744,6 +775,10 @@ function showLogin() {
 function showApp() {
   document.getElementById('headerUsername').textContent = currentUser['名前'] + ' さん';
   document.getElementById('app').classList.add('visible');
+  // 管理者のみ管理ボタンを表示
+  if (currentUser['ID'] === 'admin') {
+    document.getElementById('adminBtn').style.display = '';
+  }
   renderHome();
 }
 
@@ -1399,6 +1434,96 @@ document.addEventListener('keydown', async e => {
   if (e.key==='ArrowRight' || e.key==='ArrowDown') await nextPage();
   if (e.key==='ArrowLeft'  || e.key==='ArrowUp')   await prevPage();
 });
+
+// ════════════════════════════════
+// ユーザー管理機能
+// ════════════════════════════════
+
+function openAdminPanel() {
+  renderUserList();
+  document.getElementById('adminPanel').classList.add('open');
+}
+
+function closeAdminPanel() {
+  document.getElementById('adminPanel').classList.remove('open');
+}
+
+function renderUserList() {
+  const list = document.getElementById('userList');
+  list.innerHTML = USERS.map((u, i) => {
+    const isAdmin = u['ID'] === 'admin';
+    const isActive = u['有効'] === '1' || u['有効'] === '○';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:8px;margin-bottom:6px;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;">${u['名前']} <span style="font-size:11px;color:var(--text2);">ID: ${u['ID']}</span></div>
+        <div style="font-size:11px;color:var(--text3);">PW: ${'●'.repeat(Math.min(u['パスワード'].length,8))}</div>
+      </div>
+      <span style="font-size:11px;padding:3px 10px;border-radius:20px;${isActive?'background:rgba(52,211,153,.15);color:var(--success);':'background:rgba(252,129,129,.15);color:var(--danger);'}">${isActive?'有効':'無効'}</span>
+      ${!isAdmin ? `
+      <button onclick="toggleUserActive(${i})" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit;">${isActive?'無効化':'有効化'}</button>
+      <button onclick="deleteUser(${i})" style="padding:5px 10px;border-radius:6px;border:1px solid rgba(252,129,129,.3);background:transparent;color:var(--danger);font-size:11px;cursor:pointer;font-family:inherit;">削除</button>
+      ` : '<span style="font-size:11px;color:var(--text3);">管理者</span>'}
+    </div>`;
+  }).join('');
+}
+
+function toggleUserActive(idx) {
+  const u = USERS[idx];
+  u['有効'] = (u['有効'] === '1' || u['有効'] === '○') ? '0' : '1';
+  renderUserList();
+}
+
+function deleteUser(idx) {
+  const u = USERS[idx];
+  if (!confirm(`「${u['名前']}」を削除しますか？`)) return;
+  USERS.splice(idx, 1);
+  renderUserList();
+}
+
+function addUser() {
+  const name = document.getElementById('newName').value.trim();
+  const id   = document.getElementById('newId').value.trim();
+  const pw   = document.getElementById('newPw').value.trim();
+  const err  = document.getElementById('addUserError');
+
+  if (!name || !id || !pw) {
+    err.textContent = '名前・ID・パスワードをすべて入力してください';
+    err.style.display = '';
+    return;
+  }
+  if (USERS.find(u => u['ID'] === id)) {
+    err.textContent = 'そのIDはすでに使用されています';
+    err.style.display = '';
+    return;
+  }
+  err.style.display = 'none';
+  USERS.push({ '名前': name, 'ID': id, 'パスワード': pw, '有効': '1' });
+  document.getElementById('newName').value = '';
+  document.getElementById('newId').value = '';
+  document.getElementById('newPw').value = '';
+  renderUserList();
+  showHint('✅ ユーザーを追加しました');
+}
+
+function exportUsersCSV() {
+  const header = '名前,ID,パスワード,有効';
+  const rows = USERS.map(u =>
+    `${u['名前']},${u['ID']},${u['パスワード']},${u['有効']}`
+  );
+  const csv = [header, ...rows].join('
+');
+  const bom = '﻿'; // Excel対応BOM
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'users.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showHint('📥 users.csvをダウンロードしました');
+}
 
 // ════════════════════════════════
 // デモデータ（APIキー未設定時のフォールバック）
