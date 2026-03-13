@@ -1130,6 +1130,8 @@ function getPDFUrl(drawing, mode) {
 
 async function renderCurrentPage() {
   if (!pdfDoc) return;
+  // GoogleDrive表示モード（pdfDoc=trueの場合）は何もしない
+  if (pdfDoc === true) return;
   const content = document.getElementById('pdfContent');
   content.innerHTML = `<div class="pdf-loading">
     <div class="pdf-loading-spin"></div><span>${currentPage}ページを描画中...</span></div>`;
@@ -1333,10 +1335,10 @@ function execDownload() {
 function downloadPDF() { openDownloadDialog('modal'); }
 
 // ─── ズーム・回転 ───
-async function zoomIn()  { zoomLevel = Math.min(zoomLevel+ZOOM_STEP, ZOOM_MAX); await renderCurrentPage(); updateZoomDisp(); }
-async function zoomOut() { zoomLevel = Math.max(zoomLevel-ZOOM_STEP, ZOOM_MIN); await renderCurrentPage(); updateZoomDisp(); }
-async function zoomReset() { zoomLevel = 1; await renderCurrentPage(); updateZoomDisp(); showHint('等倍表示'); }
-async function zoomFit()   { zoomLevel = 1; await renderCurrentPage(); updateZoomDisp(); showHint('全体表示'); }
+async function zoomIn()  { if(pdfDoc===true)return; zoomLevel = Math.min(zoomLevel+ZOOM_STEP, ZOOM_MAX); await renderCurrentPage(); updateZoomDisp(); }
+async function zoomOut() { if(pdfDoc===true)return; zoomLevel = Math.max(zoomLevel-ZOOM_STEP, ZOOM_MIN); await renderCurrentPage(); updateZoomDisp(); }
+async function zoomReset() { if(pdfDoc===true)return; zoomLevel = 1; await renderCurrentPage(); updateZoomDisp(); showHint('等倍表示'); }
+async function zoomFit()   { if(pdfDoc===true)return; zoomLevel = 1; await renderCurrentPage(); updateZoomDisp(); showHint('全体表示'); }
 function updateZoomDisp() {
   document.getElementById('zoomDisp').textContent = Math.round(zoomLevel*100)+'%';
 }
