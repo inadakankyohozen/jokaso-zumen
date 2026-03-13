@@ -511,21 +511,9 @@ canvas.pdf-canvas{display:block;}
     <div class="modal-badge-wrap" id="modalBadges"></div>
     <button class="modal-close" onclick="closeModal()">✕</button>
   </div>
-  <!-- ツールバー -->
-  <div class="pdf-toolbar">
-    <button class="tb-btn" onclick="zoomOut()">－</button>
-    <span class="zoom-disp" id="zoomDisp">100%</span>
-    <button class="tb-btn" onclick="zoomIn()">＋</button>
-    <button class="tb-btn" onclick="zoomReset()">等倍</button>
-    <button class="tb-btn" onclick="zoomFit()">全体</button>
-    <div class="tb-sep"></div>
-    <button class="tb-btn" onclick="rotatePage(-90)">↺ 左回転</button>
-    <button class="tb-btn" onclick="rotatePage(90)">↻ 右回転</button>
-    <div class="tb-sep"></div>
-    <button class="tb-btn" onclick="prevPage()">◀</button>
-    <span class="page-disp" id="pageDisp">1 / 1</span>
-    <button class="tb-btn" onclick="nextPage()">▶</button>
-  </div>
+  <!-- ツールバー非表示（Googleドライブ表示モードのため不要） -->
+  <span id="zoomDisp" style="display:none"></span>
+  <span id="pageDisp" style="display:none"></span>
   <!-- PDF表示 -->
   <div id="pdfViewport" style="flex:1;min-height:0;position:relative;">
     <div id="pdfContent" style="position:absolute;inset:0;"></div>
@@ -534,7 +522,7 @@ canvas.pdf-canvas{display:block;}
   <div class="modal-footer">
     <button class="modal-btn fav-btn" id="favModalBtn" onclick="toggleFav()">☆ お気に入り</button>
     <button class="modal-btn primary" id="dlBtn" onclick="window.open(currentDownloadUrl,'_blank')">⬇ ダウンロード</button>
-    <button class="modal-btn" onclick="closeModal()">✕ 閉じる</button>
+    <button class="modal-btn" onclick="closeModal()">← 検索に戻る</button>
   </div>
 </div>
 
@@ -1089,17 +1077,17 @@ async function openPDF(maker, series, jinso) {
         ${d['メーカー'] || ''}　${d['型式'] || ''}<br>
         <span style="font-size:14px;color:#8892a4;">${d['ファイル名']}</span>
       </div>
-      <a href="${previewUrl}" target="_blank" rel="noopener" style="
+      <a href="${previewUrl}" target="_self" style="
         display:inline-block;
         padding:16px 40px;border-radius:12px;
         background:#3d8ef0;color:#fff;
         font-size:16px;font-weight:700;cursor:pointer;
         font-family:inherit;box-shadow:0 4px 20px rgba(61,142,240,0.4);
         text-decoration:none;
-      ">📄　図面を開く（新しいタブ）</a>
+      ">📄　図面を開く</a>
       <div style="font-size:12px;color:#4a5568;line-height:1.8;">
-        タップすると新しいタブでPDFが開きます<br>
-        印刷・ダウンロードは開いた画面から行えます
+        タップするとPDFが開きます<br>
+        ブラウザの「← 戻る」で検索画面に戻れます
       </div>
     </div>`;
 
